@@ -30,7 +30,7 @@ func TestGrayscale(t *testing.T) {
 					0x00, 0x00, 0x00, 0xff, 0x33, 0x33, 0x33, 0xff, 0xff, 0xff, 0xff, 0xff,
 				},
 				Stride: 3 * 4,
-				Rect:   image.Rect(0, 0, 3*4, 3),
+				Rect:   image.Rect(-1, -1, 11, 2),
 			},
 		},
 		{
@@ -42,7 +42,7 @@ func TestGrayscale(t *testing.T) {
 					0x00, 0x00, 0x00, 0xff, 0x33, 0x33, 0x33, 0xff, 0xff, 0xff, 0xff, 0xff,
 				},
 				Stride: 3 * 4,
-				Rect:   image.Rect(0, 0, 3, 3),
+				Rect:   image.Rect(-1, -1, 2, 2),
 			},
 		},
 		{
@@ -57,7 +57,7 @@ func TestGrayscale(t *testing.T) {
 					0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 				},
 				Stride: 4 * 4,
-				Rect:   image.Rect(0, 0, 2, 3),
+				Rect:   image.Rect(-1, -1, 1, 2),
 			},
 		},
 		{
@@ -69,7 +69,7 @@ func TestGrayscale(t *testing.T) {
 					0x00, 0x00, 0x00, 0xff, 0x33, 0x33, 0x33, 0xff, 0xff, 0xff, 0xff, 0xff,
 				},
 				Stride: 3 * 4,
-				Rect:   image.Rect(0, 0, 3, 3),
+				Rect:   image.Rect(-1, -1, 2, 2),
 			},
 		},
 		{
@@ -84,7 +84,7 @@ func TestGrayscale(t *testing.T) {
 					0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 				},
 				Stride: 4 * 4,
-				Rect:   image.Rect(0, 0, 2, 3),
+				Rect:   image.Rect(-1, -1, 1, 2),
 			},
 		},
 		{
@@ -113,19 +113,19 @@ func TestGrayscale(t *testing.T) {
 
 			// Special case for YCbCr images. This is difficult to test, as direct comparisons fail with
 			// seemingly random bits misplaced. My best guess is compression?
-			// The "real" test here is how the outcome looks, and I cant see any differences between this
+			// The "real" test here is how the outcome looks, and I can't see any differences between this
 			// and draw.Draw. For being roughly 350 times faster than the aforementioned, seems good enough.
 			// If you have a better idea how to test this or know why direct comparisons fail like they do,
 			// please submit an issue/PR!
 			if _, ok := tt.src.(*image.YCbCr); ok {
 				if !isWithinDeltaDiff(want.Pix, got.Pix, 8) {
-					t.Errorf("ToGray() difference above acceptable delta")
+					t.Errorf("Grayscale() difference above acceptable delta")
 				}
 				return
 			}
 
 			if diff := cmp.Diff(want, got); diff != "" {
-				t.Errorf("ToGray() mismatch (-want +got):\n%s", diff)
+				t.Errorf("Grayscale() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
