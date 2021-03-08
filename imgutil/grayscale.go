@@ -11,7 +11,7 @@ import (
 func Grayscale(img image.Image) *image.Gray {
 	switch i := img.(type) {
 	case *image.Gray:
-		return cp(i)
+		return clone(i)
 	case *image.RGBA:
 		return rgbaToGray(i)
 	case *image.RGBA64:
@@ -35,8 +35,8 @@ func drawGray(img image.Image) *image.Gray {
 	return dst
 }
 
-// cp returns a copy of a grayscale image.
-func cp(src *image.Gray) *image.Gray {
+// clone returns a copy of a grayscale image.
+func clone(src *image.Gray) *image.Gray {
 	b := src.Bounds()
 	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
 	copy(dst.Pix, src.Pix)
