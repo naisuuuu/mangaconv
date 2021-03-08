@@ -23,6 +23,14 @@ func mustReadImg(path string) image.Image {
 	return i
 }
 
+func mustBeGray(i image.Image) *image.Gray {
+	v, ok := i.(*image.Gray)
+	if !ok {
+		panic("image is not grayscale")
+	}
+	return v
+}
+
 // isImageType checks whether image is of type t. This is kind of a hack, but prevents easy to
 // overlook testing errors. t is case sensitive.
 func isImageType(img image.Image, t string) bool {
@@ -47,4 +55,12 @@ func abs(i int) uint {
 		return uint(-i)
 	}
 	return uint(i)
+}
+
+func median(s []uint8) uint8 {
+	total := 0
+	for i := 0; i < len(s); i++ {
+		total += int(s[i])
+	}
+	return uint8(total / len(s))
 }
