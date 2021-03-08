@@ -1,5 +1,3 @@
-// Package imgutil implements a set of image processing utilities.
-// No funcs in this package perform modifications in-place, copies are returned instead.
 package imgutil
 
 import (
