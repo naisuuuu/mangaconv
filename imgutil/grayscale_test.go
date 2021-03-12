@@ -2,28 +2,21 @@ package imgutil_test
 
 import (
 	"image"
-	"image/draw"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/naisuuuu/mangaconv/imgutil"
 )
 
-func drawGray(img image.Image) *image.Gray {
-	b := img.Bounds()
-	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
-	draw.Draw(dst, dst.Bounds(), img, b.Min, draw.Src)
-	return dst
-}
-
 func TestGrayscale(t *testing.T) {
 	tests := []struct {
 		name string
 		src  image.Image
+		want *image.Gray
 	}{
 		{
-			"Gray",
-			&image.Gray{
+			name: "Gray",
+			src: &image.Gray{
 				Pix: []uint8{
 					0xcc, 0x00, 0x00, 0x01, 0x00, 0xcc, 0x00, 0x02, 0x00, 0x00, 0xcc, 0x03,
 					0x11, 0x22, 0x33, 0xff, 0x33, 0x22, 0x11, 0xff, 0xaa, 0x33, 0xbb, 0xff,
@@ -32,10 +25,41 @@ func TestGrayscale(t *testing.T) {
 				Stride: 3 * 4,
 				Rect:   image.Rect(-1, -1, 11, 2),
 			},
+			want: &image.Gray{
+				Pix: []uint8{
+					0xcc, 0x00, 0x00, 0x01, 0x00, 0xcc, 0x00, 0x02, 0x00, 0x00, 0xcc, 0x03,
+					0x11, 0x22, 0x33, 0xff, 0x33, 0x22, 0x11, 0xff, 0xaa, 0x33, 0xbb, 0xff,
+					0x00, 0x00, 0x00, 0xff, 0x33, 0x33, 0x33, 0xff, 0xff, 0xff, 0xff, 0xff,
+				},
+				Stride: 3 * 4,
+				Rect:   image.Rect(0, 0, 12, 3),
+			},
 		},
 		{
-			"RGBA",
-			&image.RGBA{
+			// This happens when reading grayscale .jpg files.
+			name: "Gray - extra bytes",
+			src: &image.Gray{
+				Pix: []uint8{
+					0xcc, 0x00, 0x00, 0x01, 0x00, 0xcc, 0x00, 0x02, 0x00, 0x00, 0xcc, 0x03,
+					0x11, 0x22, 0x33, 0xff, 0x33, 0x22, 0x11, 0xff, 0xaa, 0x33, 0xbb, 0xff,
+					0x00, 0x00, 0x00, 0xff, 0x33, 0x33, 0x33, 0xff, 0xff, 0xff, 0xff, 0xff,
+				},
+				Stride: 3 * 4,
+				Rect:   image.Rect(-1, -1, 7, 1),
+			},
+			want: &image.Gray{
+				Pix: []uint8{
+					0xcc, 0x00, 0x00, 0x01, 0x00, 0xcc, 0x00, 0x02, 0x00, 0x00, 0xcc, 0x03,
+					0x11, 0x22, 0x33, 0xff, 0x33, 0x22, 0x11, 0xff, 0xaa, 0x33, 0xbb, 0xff,
+					0x00, 0x00, 0x00, 0xff, 0x33, 0x33, 0x33, 0xff, 0xff, 0xff, 0xff, 0xff,
+				},
+				Stride: 3 * 4,
+				Rect:   image.Rect(0, 0, 8, 2),
+			},
+		},
+		{
+			name: "RGBA",
+			src: &image.RGBA{
 				Pix: []uint8{
 					0xcc, 0x00, 0x00, 0x01, 0x00, 0xcc, 0x00, 0x02, 0x00, 0x00, 0xcc, 0x03,
 					0x11, 0x22, 0x33, 0xff, 0x33, 0x22, 0x11, 0xff, 0xaa, 0x33, 0xbb, 0xff,
@@ -44,10 +68,15 @@ func TestGrayscale(t *testing.T) {
 				Stride: 3 * 4,
 				Rect:   image.Rect(-1, -1, 2, 2),
 			},
+			want: &image.Gray{
+				Pix:    []uint8{0x3d, 0x78, 0x17, 0x1e, 0x25, 0x66, 0x0, 0x33, 0xff},
+				Stride: 3,
+				Rect:   image.Rect(0, 0, 3, 3),
+			},
 		},
 		{
-			"RGBA64",
-			&image.RGBA64{
+			name: "RGBA64",
+			src: &image.RGBA64{
 				Pix: []uint8{
 					0xcc, 0x00, 0x00, 0x01, 0x00, 0xcc, 0x00, 0x02,
 					0x00, 0x00, 0xcc, 0x03, 0x00, 0x00, 0xcc, 0x03,
@@ -59,10 +88,15 @@ func TestGrayscale(t *testing.T) {
 				Stride: 4 * 4,
 				Rect:   image.Rect(-1, -1, 1, 2),
 			},
+			want: &image.Gray{
+				Pix:    []uint8{0x3d, 0x77, 0x29, 0xb4, 0x6, 0xff},
+				Stride: 2,
+				Rect:   image.Rect(0, 0, 2, 3),
+			},
 		},
 		{
-			"NRGBA",
-			&image.NRGBA{
+			name: "NRGBA",
+			src: &image.NRGBA{
 				Pix: []uint8{
 					0xcc, 0x00, 0x00, 0x01, 0x00, 0xcc, 0x00, 0x02, 0x00, 0x00, 0xcc, 0x03,
 					0x11, 0x22, 0x33, 0xff, 0x33, 0x22, 0x11, 0xff, 0xaa, 0x33, 0xbb, 0xff,
@@ -71,10 +105,15 @@ func TestGrayscale(t *testing.T) {
 				Stride: 3 * 4,
 				Rect:   image.Rect(-1, -1, 2, 2),
 			},
+			want: &image.Gray{
+				Pix:    []uint8{0x0, 0x0, 0x0, 0x1e, 0x25, 0x66, 0x0, 0x33, 0xff},
+				Stride: 3,
+				Rect:   image.Rect(0, 0, 3, 3),
+			},
 		},
 		{
-			"NRGBA64",
-			&image.NRGBA64{
+			name: "NRGBA64",
+			src: &image.NRGBA64{
 				Pix: []uint8{
 					0xcc, 0x00, 0x00, 0x01, 0x00, 0xcc, 0x00, 0x02,
 					0x00, 0x00, 0xcc, 0x03, 0x00, 0x00, 0xcc, 0x03,
@@ -86,18 +125,20 @@ func TestGrayscale(t *testing.T) {
 				Stride: 4 * 4,
 				Rect:   image.Rect(-1, -1, 1, 2),
 			},
+			want: &image.Gray{
+				Pix:    []uint8{0x0, 0x5f, 0x2, 0x84, 0x1, 0xff},
+				Stride: 2,
+				Rect:   image.Rect(0, 0, 2, 3),
+			},
 		},
 		{
-			"YCbCr",
-			mustReadImg("testdata/wikipe-tan-YCbCr.jpg"),
+			name: "YCbCr",
+			src:  mustReadImg("testdata/wikipe-tan-YCbCr.jpg"),
+			want: mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png")),
 		},
 	}
 	for _, tt := range tests {
-		if !isImageType(tt.src, tt.name) {
-			t.Fatalf("source image is not of type %s", tt.name)
-		}
 		t.Run(tt.name, func(t *testing.T) {
-			want := drawGray(tt.src)
 			got := imgutil.Grayscale(tt.src)
 
 			// Special case for when passed image is already grayscale.
@@ -118,13 +159,13 @@ func TestGrayscale(t *testing.T) {
 			// If you have a better idea how to test this or know why direct comparisons fail like they do,
 			// please submit an issue/PR!
 			if _, ok := tt.src.(*image.YCbCr); ok {
-				if !isWithinDeltaDiff(want.Pix, got.Pix, 8) {
+				if !isWithinDeltaDiff(tt.want.Pix, got.Pix, 2) {
 					t.Errorf("Grayscale() difference above acceptable delta")
 				}
 				return
 			}
 
-			if diff := cmp.Diff(want, got); diff != "" {
+			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("Grayscale() mismatch (-want +got):\n%s", diff)
 			}
 		})

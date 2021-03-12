@@ -36,7 +36,11 @@ func drawGray(img image.Image) *image.Gray {
 // clone returns a copy of a grayscale image.
 func clone(src *image.Gray) *image.Gray {
 	b := src.Bounds()
-	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
+	dst := &image.Gray{
+		Rect:   image.Rect(0, 0, b.Dx(), b.Dy()),
+		Stride: src.Stride,
+		Pix:    make([]uint8, len(src.Pix)),
+	}
 	copy(dst.Pix, src.Pix)
 	return dst
 }
