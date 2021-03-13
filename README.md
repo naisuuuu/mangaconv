@@ -1,4 +1,4 @@
-[![CI](https://github.com/naisuuuu/mangaconv/workflows/CI/badge.svg?branch=main)
+[![CI](https://github.com/naisuuuu/mangaconv/actions/workflows/ci.yml/badge.svg?branch=main)
 ](https://github.com/naisuuuu/mangaconv/actions?query=branch%3Amain)
 
 # mangaconv
