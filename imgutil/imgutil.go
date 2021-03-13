@@ -7,6 +7,8 @@ import (
 	"math"
 	"runtime"
 	"sync"
+
+	"golang.org/x/image/draw"
 )
 
 // applyLookup returns an image with specified lookup table applied.
@@ -130,4 +132,28 @@ func AutoContrast(img *image.Gray, cutoff float32) *image.Gray {
 	}
 
 	return applyLookup(img, lut)
+}
+
+// Fit returns an image scaled to fit the specified bounding box without changing the aspect ratio.
+func Fit(img *image.Gray, x, y int) *image.Gray {
+	bounds := img.Bounds()
+	if x <= 0 {
+		x = bounds.Dx()
+	}
+	if y <= 0 {
+		y = bounds.Dy()
+	}
+	if x == bounds.Dx() && y == bounds.Dy() {
+		return clone(img)
+	}
+	width, height := float64(bounds.Dx()), float64(bounds.Dy())
+	scale := math.Min(float64(x)/width, float64(y)/height)
+	rect := image.Rect(0, 0, int(math.Round(scale*width)), int(math.Round(scale*height)))
+	// This is hardly optimal, but since there are no fast paths for grayscale destination images in
+	// x/image/draw, it winds up being faster to scale to RGBA dst and then convert to grayscale
+	// using our own optimized implementation.
+	// TODO: re-implement resampling logic to directly handle grayscale images.
+	dst := image.NewRGBA(rect)
+	draw.CatmullRom.Scale(dst, rect, img, img.Bounds(), draw.Over, nil)
+	return Grayscale(dst)
 }
