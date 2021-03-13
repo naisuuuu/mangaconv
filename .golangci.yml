@@ -1,0 +1,69 @@
+# golangci-lint configuration.
+# see https://golangci-lint.run/usage/configuration/
+
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - dogsled
+    - dupl
+    - errcheck
+    - funlen
+    - gci
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - goerr113
+    - goimports
+    - golint
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - noctx
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - whitespace
+
+linters-settings:
+  dupl:
+    threshold: 100
+  funlen:
+    lines: 100
+    statements: 50
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - octalLiteral
+  gocyclo:
+    min-complexity: 15
+  goimports:
+    local-prefixes: github.com/naisuuuu/
+  golint:
+    min-confidence: 0
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - dupl
+        - errcheck
+        - funlen
+        - goerr113
+        - gomnd
+        - lll

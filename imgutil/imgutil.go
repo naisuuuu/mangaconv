@@ -12,7 +12,7 @@ import (
 )
 
 // applyLookup returns an image with specified lookup table applied.
-func applyLookup(src *image.Gray, lut [256]uint8) *image.Gray {
+func applyLookup(src *image.Gray, lut *[256]uint8) *image.Gray {
 	b := src.Bounds()
 	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
 	concurrentIterate(b.Dy(), func(y int) {
@@ -40,7 +40,7 @@ func AdjustGamma(img *image.Gray, gamma float64) *image.Gray {
 	for i := 0; i < 256; i++ {
 		lut[i] = clamp(math.Pow(float64(i)/255, 1/gamma) * 255)
 	}
-	return applyLookup(img, lut)
+	return applyLookup(img, &lut)
 }
 
 // Histogram returns a histogram of a grayscale image.
@@ -131,7 +131,7 @@ func AutoContrast(img *image.Gray, cutoff float32) *image.Gray {
 		lut[i] = clamp(float64(i)*scale + offset)
 	}
 
-	return applyLookup(img, lut)
+	return applyLookup(img, &lut)
 }
 
 // Fit returns an image scaled to fit the specified bounding box without changing the aspect ratio.
