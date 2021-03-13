@@ -221,7 +221,7 @@ func TestFit(t *testing.T) {
 }
 
 func BenchmarkFit(b *testing.B) {
-	img := mustBeGray(mustReadImg("testdata/wikipe-tan-RGBA.png"))
+	img := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		imgutil.Fit(img, 150, 150)
