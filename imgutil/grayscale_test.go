@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
 	"github.com/naisuuuu/mangaconv/imgutil"
 )
 
@@ -193,11 +194,5 @@ func BenchmarkGrayscale(b *testing.B) {
 				imgutil.Grayscale(bb.img)
 			}
 		})
-		// // In case you want to compare the performance against draw.Draw implementation.
-		// b.Run(bb.name+"Draw", func(b *testing.B) {
-		// 	for i := 0; i < b.N; i++ {
-		// 		drawGray(bb.img)
-		// 	}
-		// })
 	}
 }
