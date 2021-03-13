@@ -1,3 +1,6 @@
+[![CI](https://github.com/naisuuuu/mangaconv/workflows/CI/badge.svg?branch=main)
+](https://github.com/naisuuuu/mangaconv/actions?query=branch%3Amain)
+
 # mangaconv
 
 mangaconv helps convert manga and other comics into epub and cbz files for reading on an e-reader.
