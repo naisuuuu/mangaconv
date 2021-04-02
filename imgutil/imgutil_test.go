@@ -144,7 +144,7 @@ func TestAutoContrast(t *testing.T) {
 	tests := []struct {
 		name   string
 		image  *image.Gray
-		cutoff float32
+		cutoff float64
 		want   uint8
 	}{
 		{

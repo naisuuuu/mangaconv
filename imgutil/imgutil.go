@@ -79,12 +79,12 @@ func Histogram(img *image.Gray) [256]uint {
 //
 // This implementation is taken from Pillow's ImageOps.autocontrast method. See:
 // https://pillow.readthedocs.io/en/stable/_modules/PIL/ImageOps.html#autocontrast
-func AutoContrast(img *image.Gray, cutoff float32) *image.Gray {
+func AutoContrast(img *image.Gray, cutoff float64) *image.Gray {
 	hist := Histogram(img)
 
 	// Cutoff % of lowest/highest samples.
 	if cutoff > 0 {
-		cutl := uint(float32(len(img.Pix)) * cutoff / 100)
+		cutl := uint(float64(len(img.Pix)) * cutoff / 100)
 		cuth := cutl
 		for i := 0; i < 256; i++ {
 			if hist[i] >= cutl {
