@@ -21,7 +21,7 @@ func writeZip(path string, pages <-chan page) error {
 	w := zip.NewWriter(f)
 	defer w.Close()
 	for p := range pages {
-		f, err := w.Create(fmt.Sprintf("%d.jpg", p.Index))
+		f, err := w.Create(fmt.Sprintf("%09d.jpg", p.Index))
 		if err != nil {
 			return err
 		}
