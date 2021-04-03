@@ -23,8 +23,8 @@ type reader func(ctx context.Context, pages chan<- page, path string) error
 
 // rawPage represents a page before decoding.
 type rawPage struct {
-	File io.ReadCloser
-	Name string
+	File  io.ReadCloser
+	Index int
 }
 
 // selectReader returns an appropriate reader for the file format at path, or error if path cannot
@@ -64,6 +64,7 @@ func readDir(ctx context.Context, pages chan<- page, path string) error {
 }
 
 func readDirFiles(ctx context.Context, pages chan<- rawPage, root string) error {
+	i := 0
 	return filepath.WalkDir(root, func(path string, e fs.DirEntry, err error) error {
 		if err != nil {
 			return fmt.Errorf("cannot walk %s: %w", root, err)
@@ -76,12 +77,13 @@ func readDirFiles(ctx context.Context, pages chan<- rawPage, root string) error 
 			return fmt.Errorf("cannot open %s: %w", path, err)
 		}
 		select {
-		case pages <- rawPage{file, e.Name()}:
+		case pages <- rawPage{file, i}:
 		case <-ctx.Done():
 			// Don't forget to close any open files.
 			file.Close()
 			return ctx.Err()
 		}
+		i++
 		return nil
 	})
 }
@@ -109,6 +111,7 @@ func readZip(ctx context.Context, pages chan<- page, path string) error {
 }
 
 func readZipFiles(ctx context.Context, pages chan<- rawPage, r *zip.ReadCloser) error {
+	i := 0
 	for _, f := range r.File {
 		if !isImage(f.Name) {
 			continue
@@ -118,12 +121,13 @@ func readZipFiles(ctx context.Context, pages chan<- rawPage, r *zip.ReadCloser) 
 			return fmt.Errorf("cannot open %s: %w", f.Name, err)
 		}
 		select {
-		case pages <- rawPage{file, f.Name}:
+		case pages <- rawPage{file, i}:
 		case <-ctx.Done():
 			// Don't forget to close any open files.
 			file.Close()
 			return ctx.Err()
 		}
+		i++
 	}
 	return nil
 }
