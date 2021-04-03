@@ -58,7 +58,7 @@ func Convert(in, out string, params Params) error {
 // page represents a single manga page.
 type page struct {
 	Image image.Image
-	Name  string
+	Index int
 }
 
 // convert reads a channel of pages, applies modifications as adjusted by params and emits converted
@@ -74,7 +74,7 @@ func convert(ctx context.Context, converted chan<- page, pages <-chan page, p Pa
 				img = imgutil.AutoContrast(img, p.Cutoff)
 				img = imgutil.AdjustGamma(img, p.Gamma)
 				select {
-				case converted <- page{img, pg.Name}:
+				case converted <- page{img, pg.Index}:
 				case <-ctx.Done():
 					return
 				}

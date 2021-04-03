@@ -10,8 +10,6 @@ import (
 	_ "image/png"
 	"io"
 	"os"
-	"path/filepath"
-	"strings"
 )
 
 func writeZip(path string, pages <-chan page) error {
@@ -23,7 +21,7 @@ func writeZip(path string, pages <-chan page) error {
 	w := zip.NewWriter(f)
 	defer w.Close()
 	for p := range pages {
-		f, err := w.Create(jpgFname(p.Name))
+		f, err := w.Create(fmt.Sprintf("%d.jpg", p.Index))
 		if err != nil {
 			return err
 		}
@@ -33,10 +31,6 @@ func writeZip(path string, pages <-chan page) error {
 		}
 	}
 	return nil
-}
-
-func jpgFname(n string) string {
-	return fmt.Sprintf("%s.jpg", strings.TrimSuffix(filepath.Base(n), filepath.Ext(n)))
 }
 
 func saveImg(target io.Writer, img image.Image) error {

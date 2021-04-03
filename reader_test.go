@@ -44,10 +44,10 @@ func readHelper(path string) ([]page, error) {
 		return nil, err
 	}
 
-	var out []page
-	// at this point pages channel is already closed, so we can iterate over it synchronously.
+	// at this point pages channel is already closed and safe to operate on synchronously.
+	out := make([]page, len(pages))
 	for p := range pages {
-		out = append(out, p)
+		out[p.Index] = p
 	}
 	return out, nil
 }
@@ -62,12 +62,18 @@ func TestReader(t *testing.T) {
 		{
 			name: "directory reader",
 			path: "testdata/",
-			want: []page{{mustReadImg("testdata/wikipe-tan.png"), "wikipe-tan.png"}},
+			want: []page{
+				{mustReadImg("testdata/wikipe-tan-0.png"), 0},
+				{mustReadImg("testdata/wikipe-tan-1.png"), 1},
+			},
 		},
 		{
 			name: "zip reader",
 			path: "testdata/wikipe-tan.zip",
-			want: []page{{mustReadImg("testdata/wikipe-tan.png"), "wikipe-tan.png"}},
+			want: []page{
+				{mustReadImg("testdata/wikipe-tan-0.png"), 0},
+				{mustReadImg("testdata/wikipe-tan-1.png"), 1},
+			},
 		},
 		{
 			name: "file without extension",

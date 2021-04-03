@@ -18,10 +18,10 @@ func decode(ctx context.Context, pages chan<- page, raws <-chan rawPage) error {
 			for raw := range raws {
 				img, err := decodeImage(raw.File)
 				if err != nil {
-					return fmt.Errorf("cannot decode %s: %w", raw.Name, err)
+					return fmt.Errorf("cannot decode image number %d: %w", raw.Index, err)
 				}
 				select {
-				case pages <- page{img, raw.Name}:
+				case pages <- page{img, raw.Index}:
 				case <-ctx.Done():
 					return ctx.Err()
 				}
