@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/naisuuuu/mangaconv"
 )
@@ -22,24 +23,44 @@ The default will look too dark on your computer screen, but much richer than bef
 
 	flag.Parse()
 
-	for _, in := range flag.Args() {
-		out := filepath.Dir(in)
-		if *outdir != "" {
-			out = *outdir
+	targets := make(chan target)
+	go func() {
+		defer close(targets)
+		for _, in := range flag.Args() {
+			out := filepath.Dir(in)
+			if *outdir != "" {
+				out = *outdir
+			}
+			out = filepath.Join(out, fname(in))
+			targets <- target{in, out}
 		}
-		out = filepath.Join(out, fname(in))
+	}()
 
-		if err := mangaconv.Convert(in, out, mangaconv.Params{
-			Cutoff: *cutoff,
-			Gamma:  *gamma,
-			Height: *height,
-			Width:  *width,
-		}); err != nil {
-			fmt.Println("Failed to convert", filepath.Base(in), err)
-			continue
-		}
-		fmt.Println("Converted", filepath.Base(in))
+	var wg sync.WaitGroup
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for t := range targets {
+				if err := mangaconv.Convert(t.in, t.out, mangaconv.Params{
+					Cutoff: *cutoff,
+					Gamma:  *gamma,
+					Height: *height,
+					Width:  *width,
+				}); err != nil {
+					fmt.Println("Failed to convert", filepath.Base(t.in), err)
+					return
+				}
+				fmt.Println("Converted", filepath.Base(t.in))
+			}
+		}()
 	}
+	wg.Wait()
+}
+
+type target struct {
+	in  string
+	out string
 }
 
 func fname(in string) string {
