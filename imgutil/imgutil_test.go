@@ -18,7 +18,7 @@ func TestAdjustGamma(t *testing.T) {
 	}{
 		{
 			&image.Gray{
-				Rect:   image.Rect(-1, -1, 2, 2),
+				Rect:   image.Rect(0, 0, 3, 3),
 				Stride: 3,
 				Pix: []uint8{
 					0x00, 0x11, 0x22,
@@ -39,7 +39,7 @@ func TestAdjustGamma(t *testing.T) {
 		},
 		{
 			&image.Gray{
-				Rect:   image.Rect(-1, -1, 2, 2),
+				Rect:   image.Rect(0, 0, 3, 3),
 				Stride: 3,
 				Pix: []uint8{
 					0x00, 0x11, 0x22,
@@ -60,7 +60,7 @@ func TestAdjustGamma(t *testing.T) {
 		},
 		{
 			&image.Gray{
-				Rect:   image.Rect(-1, -1, 2, 2),
+				Rect:   image.Rect(0, 0, 3, 3),
 				Stride: 3,
 				Pix: []uint8{
 					0x00, 0x11, 0x22,
@@ -82,8 +82,8 @@ func TestAdjustGamma(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%.2f", tt.gamma), func(t *testing.T) {
-			got := imgutil.AdjustGamma(tt.src, tt.gamma)
-			if diff := cmp.Diff(tt.want, got); diff != "" {
+			imgutil.AdjustGamma(tt.src, tt.gamma)
+			if diff := cmp.Diff(tt.want, tt.src); diff != "" {
 				t.Errorf("AdjustGamma() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -170,8 +170,8 @@ func TestAutoContrast(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			out := imgutil.AutoContrast(tt.image, tt.cutoff)
-			got := median(out.Pix)
+			imgutil.AutoContrast(tt.image, tt.cutoff)
+			got := median(tt.image.Pix)
 			if got != tt.want {
 				t.Errorf("AutoContrast() median = %d, want %d", got, tt.want)
 			}
