@@ -6,6 +6,7 @@ import (
 )
 
 // Grayscale returns an image converted to grayscale.
+// It always returns a copy.
 func Grayscale(img image.Image) *image.Gray {
 	switch i := img.(type) {
 	case *image.Gray:
@@ -33,15 +34,22 @@ func drawGray(img image.Image) *image.Gray {
 	return dst
 }
 
-// clone returns a copy of a grayscale image.
+// clone returns a copy of a grayscale image. It additionally corrects negative bounds and removes
+// dangling bytes from the underlaying pixel slice, if any are present.
 func clone(src *image.Gray) *image.Gray {
 	b := src.Bounds()
-	dst := &image.Gray{
-		Rect:   image.Rect(0, 0, b.Dx(), b.Dy()),
-		Stride: src.Stride,
-		Pix:    make([]uint8, len(src.Pix)),
+	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
+	if dst.Stride == src.Stride {
+		// no need to correct stride, simply copy pixels.
+		copy(dst.Pix, src.Pix)
+		return dst
 	}
-	copy(dst.Pix, src.Pix)
+	// need to correct stride.
+	for i := 0; i < b.Dy(); i++ {
+		dstH := i * dst.Stride
+		srcH := i * src.Stride
+		copy(dst.Pix[dstH:dstH+dst.Stride], src.Pix[srcH:srcH+dst.Stride])
+	}
 	return dst
 }
 
@@ -128,7 +136,7 @@ func nrgbaToGray(src *image.NRGBA) *image.Gray {
 	return dst
 }
 
-// nrgba64ToGray converts an NRGBA64 image to grayscale.
+// nrgba64ToGray lossily converts an NRGBA64 image to grayscale.
 func nrgba64ToGray(src *image.NRGBA64) *image.Gray {
 	b := src.Bounds()
 	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
