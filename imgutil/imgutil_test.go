@@ -91,9 +91,13 @@ func TestAdjustGamma(t *testing.T) {
 }
 
 func BenchmarkAdjustGamma(b *testing.B) {
-	img := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
+	src := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		img := cloneGray(src)
+		b.StartTimer()
+
 		imgutil.AdjustGamma(img, 1.8)
 	}
 }
@@ -133,9 +137,13 @@ func TestHistogram(t *testing.T) {
 }
 
 func BenchmarkHistogram(b *testing.B) {
-	img := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
+	src := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		img := cloneGray(src)
+		b.StartTimer()
+
 		imgutil.Histogram(img)
 	}
 }
@@ -172,9 +180,13 @@ func TestAutoContrast(t *testing.T) {
 }
 
 func BenchmarkAutoContrast(b *testing.B) {
-	img := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
+	src := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		img := cloneGray(src)
+		b.StartTimer()
+
 		imgutil.AutoContrast(img, 1)
 	}
 }
@@ -222,9 +234,13 @@ func TestFit(t *testing.T) {
 }
 
 func BenchmarkFit(b *testing.B) {
-	img := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
+	src := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		img := cloneGray(src)
+		b.StartTimer()
+
 		imgutil.Fit(img, 150, 150)
 	}
 }

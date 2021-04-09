@@ -64,3 +64,47 @@ func median(s []uint8) uint8 {
 	}
 	return uint8(total / len(s))
 }
+
+func cloneSlice(b []uint8) []uint8 {
+	c := make([]uint8, len(b))
+	copy(c, b)
+	return c
+}
+
+func cloneImg(src image.Image) image.Image {
+	switch s := src.(type) {
+	case *image.Gray:
+		clone := *s
+		clone.Pix = cloneSlice(s.Pix)
+		return &clone
+	case *image.NRGBA:
+		clone := *s
+		clone.Pix = cloneSlice(s.Pix)
+		return &clone
+	case *image.NRGBA64:
+		clone := *s
+		clone.Pix = cloneSlice(s.Pix)
+		return &clone
+	case *image.RGBA:
+		clone := *s
+		clone.Pix = cloneSlice(s.Pix)
+		return &clone
+	case *image.RGBA64:
+		clone := *s
+		clone.Pix = cloneSlice(s.Pix)
+		return &clone
+	case *image.YCbCr:
+		clone := *s
+		clone.Y = cloneSlice(s.Y)
+		clone.Cb = cloneSlice(s.Cb)
+		clone.Cr = cloneSlice(s.Cr)
+		return &clone
+	}
+	return nil
+}
+
+func cloneGray(s *image.Gray) *image.Gray {
+	c := *s
+	c.Pix = cloneSlice(s.Pix)
+	return &c
+}
