@@ -68,6 +68,7 @@ func convert(ctx context.Context, converted chan<- page, pages <-chan page, p Pa
 	wg.Add(runtime.NumCPU())
 	for i := 0; i < runtime.NumCPU(); i++ {
 		go func() {
+			defer wg.Done()
 			for pg := range pages {
 				img := imgutil.Grayscale(pg.Image)
 				img = imgutil.Fit(img, p.Width, p.Height)
@@ -79,7 +80,6 @@ func convert(ctx context.Context, converted chan<- page, pages <-chan page, p Pa
 					return
 				}
 			}
-			wg.Done()
 		}()
 	}
 	wg.Wait()
