@@ -13,13 +13,9 @@ import (
 
 // applyLookup applies a lookup table to an image.
 func applyLookup(img *image.Gray, lut *[256]uint8) {
-	b := img.Bounds()
-	concurrentIterate(b.Dy(), func(y int) {
-		for x := 0; x < img.Stride; x++ {
-			// This is safe to do concurrently because we never write to the same index twice.
-			img.Pix[y*img.Stride+x] = lut[img.Pix[y*img.Stride+x]]
-		}
-	})
+	for i := 0; i < len(img.Pix); i++ {
+		img.Pix[i] = lut[img.Pix[i]]
+	}
 }
 
 // AdjustGamma applies gamma adjustments.
