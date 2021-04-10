@@ -21,7 +21,7 @@ The default will look too dark on your computer screen, but much richer than bef
 	height := flag.Int("height", 1920, "Maximum height of the image.")
 	width := flag.Int("width", 1920, "Maximum width of the image.")
 	outdir := flag.String("outdir", "", `Path to output directory.
-If provided directory does not exit, mangaconv will attempt to create it. (default input dir)`)
+If provided directory does not exist, mangaconv will attempt to create it. (default input dir)`)
 
 	flag.Parse()
 
