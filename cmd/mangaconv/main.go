@@ -11,6 +11,11 @@ import (
 	"github.com/naisuuuu/mangaconv"
 )
 
+var (
+	version = "dev"
+	date    = "unknown"
+)
+
 func main() {
 	cutoff := flag.Float64("cutoff", 1, `Autocontrast cutoff.
 This value is the percentage of brightest and darkest pixels ignored when normalizing the histogram.
@@ -22,8 +27,13 @@ The default will look too dark on your computer screen, but much richer than bef
 	width := flag.Int("width", 1920, "Maximum width of the image.")
 	outdir := flag.String("outdir", "", `Path to output directory.
 If provided directory does not exist, mangaconv will attempt to create it. (default input dir)`)
+	ver := flag.Bool("version", false, "Print version information.")
 
 	flag.Parse()
+
+	if *ver {
+		fmt.Printf("mangaconv version %s, built at %s\n", version, date)
+	}
 
 	// Create outdir if it doesn't exist.
 	if *outdir != "" {
