@@ -7,8 +7,6 @@ import (
 	"math"
 	"runtime"
 	"sync"
-
-	"golang.org/x/image/draw"
 )
 
 // applyLookup applies a lookup table to an image.
@@ -138,12 +136,7 @@ func Fit(img *image.Gray, x, y int) *image.Gray {
 	if scale == 1 {
 		return img
 	}
-	rect := image.Rect(0, 0, int(math.Round(scale*width)), int(math.Round(scale*height)))
-	// This is hardly optimal, but since there are no fast paths for grayscale destination images in
-	// x/image/draw, it winds up being faster to scale to RGBA dst and then convert to grayscale
-	// using our own optimized implementation.
-	// TODO: re-implement resampling logic to directly handle grayscale images.
-	dst := image.NewRGBA(rect)
-	draw.CatmullRom.Scale(dst, rect, img, img.Bounds(), draw.Over, nil)
-	return Grayscale(dst)
+	dst := image.NewGray(image.Rect(0, 0, int(math.Round(scale*width)), int(math.Round(scale*height))))
+	CatmullRom.Scale(dst, img)
+	return dst
 }

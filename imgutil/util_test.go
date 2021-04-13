@@ -5,7 +5,7 @@ import (
 	"image"
 	"image/color"
 	_ "image/jpeg"
-	_ "image/png"
+	"image/png"
 	"os"
 	"strings"
 )
@@ -21,6 +21,18 @@ func mustReadImg(path string) image.Image {
 		panic(fmt.Sprintf("cannot decode %s: %s", path, err))
 	}
 	return i
+}
+
+func writeImg(path string, i image.Image) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("cannot create: %v", err)
+	}
+	defer f.Close()
+	if err := png.Encode(f, i); err != nil {
+		return fmt.Errorf("cannot encode: %v", err)
+	}
+	return nil
 }
 
 func mustBeGray(i image.Image) *image.Gray {
