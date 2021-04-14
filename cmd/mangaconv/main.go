@@ -3,11 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/naisuuuu/mangaconv"
+)
+
+var (
+	version = "dev"
+	date    = "unknown"
 )
 
 func main() {
@@ -19,11 +25,25 @@ Values < 1 darken the image, > 1 brighten it and 1 disables gamma correction.
 The default will look too dark on your computer screen, but much richer than before on e-ink.`)
 	height := flag.Int("height", 1920, "Maximum height of the image.")
 	width := flag.Int("width", 1920, "Maximum width of the image.")
-	outdir := flag.String("outdir", "", "Path to output directory. (default input dir)")
+	outdir := flag.String("outdir", "", `Path to output directory.
+If provided directory does not exist, mangaconv will attempt to create it. (default input dir)`)
+	ver := flag.Bool("version", false, "Print version information.")
 
 	flag.Parse()
 
-	targets := make(chan target)
+	if *ver {
+		fmt.Printf("mangaconv version %s, built at %s\n", version, date)
+	}
+
+	// Create outdir if it doesn't exist.
+	if *outdir != "" {
+		if err := os.MkdirAll(*outdir, 0755); err != nil {
+			fmt.Fprintf(os.Stderr, "Could not create outdir: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	targets := make(chan target, len(flag.Args()))
 	go func() {
 		defer close(targets)
 		for _, in := range flag.Args() {
