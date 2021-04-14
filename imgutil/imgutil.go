@@ -121,22 +121,21 @@ func AutoContrast(img *image.Gray, cutoff float64) {
 	applyLookup(img, &lut)
 }
 
-// Fit returns an image scaled to fit the specified bounding box without changing the aspect ratio.
-// It returns a copy if the image needs resampling, otherwise returns the source image.
-func Fit(img *image.Gray, x, y int) *image.Gray {
-	bounds := img.Bounds()
-	if x <= 0 {
-		x = bounds.Dx()
-	}
-	if y <= 0 {
-		y = bounds.Dy()
-	}
-	width, height := float64(bounds.Dx()), float64(bounds.Dy())
+// FitRect scales an image.Rectangle to fit into a bounding box of x by y without changing the
+// aspect ratio.
+func FitRect(rect image.Rectangle, x, y int) image.Rectangle {
+	width, height := float64(rect.Dx()), float64(rect.Dy())
 	scale := math.Min(float64(x)/width, float64(y)/height)
 	if scale == 1 {
-		return img
+		return rect
 	}
-	dst := image.NewGray(image.Rect(0, 0, int(math.Round(scale*width)), int(math.Round(scale*height))))
+	return image.Rect(0, 0, int(math.Round(scale*width)), int(math.Round(scale*height)))
+}
+
+// Fit returns an image scaled to fit the specified bounding box without changing the aspect ratio.
+// It returns a copy of the image.
+func Fit(img *image.Gray, x, y int) *image.Gray {
+	dst := image.NewGray(FitRect(img.Rect, x, y))
 	CatmullRom.Scale(dst, img)
 	return dst
 }

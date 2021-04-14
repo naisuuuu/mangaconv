@@ -202,7 +202,7 @@ func TestFit(t *testing.T) {
 		{
 			name:  "fit height",
 			image: mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png")),
-			x:     0,
+			x:     1000,
 			y:     100,
 			want:  mustBeGray(mustReadImg("testdata/wikipe-tan-100h.png")),
 		},
@@ -210,15 +210,8 @@ func TestFit(t *testing.T) {
 			name:  "fit width",
 			image: mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png")),
 			x:     100,
-			y:     0,
+			y:     1000,
 			want:  mustBeGray(mustReadImg("testdata/wikipe-tan-100w.png")),
-		},
-		{
-			name:  "fit height and width",
-			image: mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png")),
-			x:     100,
-			y:     100,
-			want:  mustBeGray(mustReadImg("testdata/wikipe-tan-100h.png")),
 		},
 	}
 	for _, tt := range tests {
