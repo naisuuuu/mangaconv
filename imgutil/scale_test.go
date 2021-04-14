@@ -12,7 +12,7 @@ import (
 
 var genGoldenFiles = flag.Bool("gen_golden_files", false, "whether to generate the TestXxx golden files.")
 
-func TestScaler(t *testing.T) {
+func TestKernelScaler(t *testing.T) {
 	tests := []struct {
 		name  string
 		w     int
@@ -52,5 +52,16 @@ func TestScaler(t *testing.T) {
 				t.Errorf("%s: actual image differs from golden image", goldenFname)
 			}
 		})
+	}
+}
+
+func BenchmarkKernelScaler(b *testing.B) {
+	src := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
+	dstRect := imgutil.FitRect(src.Bounds(), 150, 150)
+	scaler := imgutil.CatmullRom.NewScaler(dstRect.Dx(), dstRect.Dy(), src.Rect.Dx(), src.Rect.Dy())
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		dst := image.NewGray(dstRect)
+		scaler.Scale(dst, src)
 	}
 }
