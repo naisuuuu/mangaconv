@@ -50,11 +50,10 @@ func TestGrayscale(t *testing.T) {
 			},
 			want: &image.Gray{
 				Pix: []uint8{
-					0xcc, 0x00, 0x00, 0x01, 0x00, 0xcc, 0x00, 0x02, 0x00, 0x00, 0xcc, 0x03,
-					0x11, 0x22, 0x33, 0xff, 0x33, 0x22, 0x11, 0xff, 0xaa, 0x33, 0xbb, 0xff,
-					0x00, 0x00, 0x00, 0xff, 0x33, 0x33, 0x33, 0xff, 0xff, 0xff, 0xff, 0xff,
+					0xcc, 0x00, 0x00, 0x01, 0x00, 0xcc, 0x00, 0x02,
+					0x11, 0x22, 0x33, 0xff, 0x33, 0x22, 0x11, 0xff,
 				},
-				Stride: 3 * 4,
+				Stride: 8,
 				Rect:   image.Rect(0, 0, 8, 2),
 			},
 		},
@@ -148,7 +147,7 @@ func TestGrayscale(t *testing.T) {
 				if got == img {
 					t.Error("got source image, want a copy")
 				}
-				if len(img.Pix) > 0 && &img.Pix[0] == &got.Pix[0] {
+				if len(img.Pix) > 0 && len(got.Pix) > 0 && &img.Pix[0] == &got.Pix[0] {
 					t.Error("copied image points to the same underlying pixel array")
 				}
 			}
@@ -191,7 +190,11 @@ func BenchmarkGrayscale(b *testing.B) {
 		}
 		b.Run(bb.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				imgutil.Grayscale(bb.img)
+				b.StopTimer()
+				img := cloneImg(bb.img)
+				b.StartTimer()
+
+				imgutil.Grayscale(img)
 			}
 		})
 	}

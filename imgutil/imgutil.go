@@ -1,5 +1,5 @@
 // Package imgutil implements a set of image processing utilities.
-// No funcs in this package perform modifications in-place, copies are returned instead.
+// Funcs in this package perform modifications in-place, except where otherwise noted.
 package imgutil
 
 import (
@@ -7,40 +7,27 @@ import (
 	"math"
 	"runtime"
 	"sync"
-
-	"golang.org/x/image/draw"
 )
 
-// applyLookup returns an image with specified lookup table applied.
-func applyLookup(src *image.Gray, lut *[256]uint8) *image.Gray {
-	b := src.Bounds()
-	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
-	concurrentIterate(b.Dy(), func(y int) {
-		for x := 0; x < dst.Stride; x++ {
-			// This is safe to do concurrently because we never write to the same index twice.
-			//
-			// Note that we use dst.Stride to interact with the destination image and
-			// src.Stride for the source. This is because even though both images are
-			// grayscale, sometimes the source may be encoded with extra dangling bits and
-			// longer stride.
-			dst.Pix[y*dst.Stride+x] = lut[src.Pix[y*src.Stride+x]]
-		}
-	})
-	return dst
+// applyLookup applies a lookup table to an image.
+func applyLookup(img *image.Gray, lut *[256]uint8) {
+	for i := 0; i < len(img.Pix); i++ {
+		img.Pix[i] = lut[img.Pix[i]]
+	}
 }
 
-// AdjustGamma returns an image with gamma modifications applied.
+// AdjustGamma applies gamma adjustments.
 //
 // Gamma value of 1 doesn't change the image, < 1 darkens and >1 brightens it.
-func AdjustGamma(img *image.Gray, gamma float64) *image.Gray {
+func AdjustGamma(img *image.Gray, gamma float64) {
 	if gamma == 1 {
-		return clone(img)
+		return
 	}
 	var lut [256]uint8
 	for i := 0; i < 256; i++ {
 		lut[i] = clamp(math.Pow(float64(i)/255, 1/gamma) * 255)
 	}
-	return applyLookup(img, &lut)
+	applyLookup(img, &lut)
 }
 
 // Histogram returns a histogram of a grayscale image.
@@ -74,12 +61,12 @@ func Histogram(img *image.Gray) [256]uint {
 	return hist
 }
 
-// AutoContrast returns a grayscale image with histogram normalization applied, ignoring specified
-// cutoff % highest and lowest values.
+// AutoContrast applies histogram normalization to the image, ignoring specified cutoff % highest
+// and lowest values.
 //
 // This implementation is taken from Pillow's ImageOps.autocontrast method. See:
 // https://pillow.readthedocs.io/en/stable/_modules/PIL/ImageOps.html#autocontrast
-func AutoContrast(img *image.Gray, cutoff float64) *image.Gray {
+func AutoContrast(img *image.Gray, cutoff float64) {
 	hist := Histogram(img)
 
 	// Cutoff % of lowest/highest samples.
@@ -120,7 +107,7 @@ func AutoContrast(img *image.Gray, cutoff float64) *image.Gray {
 	}
 
 	if hi <= lo {
-		return img
+		return
 	}
 
 	// Generate lookup table.
@@ -131,29 +118,24 @@ func AutoContrast(img *image.Gray, cutoff float64) *image.Gray {
 		lut[i] = clamp(float64(i)*scale + offset)
 	}
 
-	return applyLookup(img, &lut)
+	applyLookup(img, &lut)
+}
+
+// FitRect scales an image.Rectangle to fit into a bounding box of x by y without changing the
+// aspect ratio.
+func FitRect(rect image.Rectangle, x, y int) image.Rectangle {
+	width, height := float64(rect.Dx()), float64(rect.Dy())
+	scale := math.Min(float64(x)/width, float64(y)/height)
+	if scale == 1 {
+		return rect
+	}
+	return image.Rect(0, 0, int(math.Round(scale*width)), int(math.Round(scale*height)))
 }
 
 // Fit returns an image scaled to fit the specified bounding box without changing the aspect ratio.
+// It returns a copy of the image.
 func Fit(img *image.Gray, x, y int) *image.Gray {
-	bounds := img.Bounds()
-	if x <= 0 {
-		x = bounds.Dx()
-	}
-	if y <= 0 {
-		y = bounds.Dy()
-	}
-	if x == bounds.Dx() && y == bounds.Dy() {
-		return clone(img)
-	}
-	width, height := float64(bounds.Dx()), float64(bounds.Dy())
-	scale := math.Min(float64(x)/width, float64(y)/height)
-	rect := image.Rect(0, 0, int(math.Round(scale*width)), int(math.Round(scale*height)))
-	// This is hardly optimal, but since there are no fast paths for grayscale destination images in
-	// x/image/draw, it winds up being faster to scale to RGBA dst and then convert to grayscale
-	// using our own optimized implementation.
-	// TODO: re-implement resampling logic to directly handle grayscale images.
-	dst := image.NewRGBA(rect)
-	draw.CatmullRom.Scale(dst, rect, img, img.Bounds(), draw.Over, nil)
-	return Grayscale(dst)
+	dst := image.NewGray(FitRect(img.Rect, x, y))
+	CatmullRom.Scale(dst, img)
+	return dst
 }

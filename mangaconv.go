@@ -72,8 +72,8 @@ func convert(ctx context.Context, converted chan<- page, pages <-chan page, p Pa
 			for pg := range pages {
 				img := imgutil.Grayscale(pg.Image)
 				img = imgutil.Fit(img, p.Width, p.Height)
-				img = imgutil.AutoContrast(img, p.Cutoff)
-				img = imgutil.AdjustGamma(img, p.Gamma)
+				imgutil.AutoContrast(img, p.Cutoff)
+				imgutil.AdjustGamma(img, p.Gamma)
 				select {
 				case converted <- page{img, pg.Index}:
 				case <-ctx.Done():

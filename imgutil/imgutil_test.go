@@ -18,7 +18,7 @@ func TestAdjustGamma(t *testing.T) {
 	}{
 		{
 			&image.Gray{
-				Rect:   image.Rect(-1, -1, 2, 2),
+				Rect:   image.Rect(0, 0, 3, 3),
 				Stride: 3,
 				Pix: []uint8{
 					0x00, 0x11, 0x22,
@@ -39,7 +39,7 @@ func TestAdjustGamma(t *testing.T) {
 		},
 		{
 			&image.Gray{
-				Rect:   image.Rect(-1, -1, 2, 2),
+				Rect:   image.Rect(0, 0, 3, 3),
 				Stride: 3,
 				Pix: []uint8{
 					0x00, 0x11, 0x22,
@@ -60,7 +60,7 @@ func TestAdjustGamma(t *testing.T) {
 		},
 		{
 			&image.Gray{
-				Rect:   image.Rect(-1, -1, 2, 2),
+				Rect:   image.Rect(0, 0, 3, 3),
 				Stride: 3,
 				Pix: []uint8{
 					0x00, 0x11, 0x22,
@@ -82,8 +82,8 @@ func TestAdjustGamma(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("%.2f", tt.gamma), func(t *testing.T) {
-			got := imgutil.AdjustGamma(tt.src, tt.gamma)
-			if diff := cmp.Diff(tt.want, got); diff != "" {
+			imgutil.AdjustGamma(tt.src, tt.gamma)
+			if diff := cmp.Diff(tt.want, tt.src); diff != "" {
 				t.Errorf("AdjustGamma() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -91,9 +91,13 @@ func TestAdjustGamma(t *testing.T) {
 }
 
 func BenchmarkAdjustGamma(b *testing.B) {
-	img := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
+	src := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		img := cloneGray(src)
+		b.StartTimer()
+
 		imgutil.AdjustGamma(img, 1.8)
 	}
 }
@@ -133,9 +137,13 @@ func TestHistogram(t *testing.T) {
 }
 
 func BenchmarkHistogram(b *testing.B) {
-	img := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
+	src := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		img := cloneGray(src)
+		b.StartTimer()
+
 		imgutil.Histogram(img)
 	}
 }
@@ -162,8 +170,8 @@ func TestAutoContrast(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			out := imgutil.AutoContrast(tt.image, tt.cutoff)
-			got := median(out.Pix)
+			imgutil.AutoContrast(tt.image, tt.cutoff)
+			got := median(tt.image.Pix)
 			if got != tt.want {
 				t.Errorf("AutoContrast() median = %d, want %d", got, tt.want)
 			}
@@ -172,9 +180,13 @@ func TestAutoContrast(t *testing.T) {
 }
 
 func BenchmarkAutoContrast(b *testing.B) {
-	img := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
+	src := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		img := cloneGray(src)
+		b.StartTimer()
+
 		imgutil.AutoContrast(img, 1)
 	}
 }
@@ -190,7 +202,7 @@ func TestFit(t *testing.T) {
 		{
 			name:  "fit height",
 			image: mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png")),
-			x:     0,
+			x:     1000,
 			y:     100,
 			want:  mustBeGray(mustReadImg("testdata/wikipe-tan-100h.png")),
 		},
@@ -198,15 +210,8 @@ func TestFit(t *testing.T) {
 			name:  "fit width",
 			image: mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png")),
 			x:     100,
-			y:     0,
+			y:     1000,
 			want:  mustBeGray(mustReadImg("testdata/wikipe-tan-100w.png")),
-		},
-		{
-			name:  "fit height and width",
-			image: mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png")),
-			x:     100,
-			y:     100,
-			want:  mustBeGray(mustReadImg("testdata/wikipe-tan-100h.png")),
 		},
 	}
 	for _, tt := range tests {
@@ -222,9 +227,13 @@ func TestFit(t *testing.T) {
 }
 
 func BenchmarkFit(b *testing.B) {
-	img := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
+	src := mustBeGray(mustReadImg("testdata/wikipe-tan-Gray.png"))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		img := cloneGray(src)
+		b.StartTimer()
+
 		imgutil.Fit(img, 150, 150)
 	}
 }

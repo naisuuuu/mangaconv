@@ -5,7 +5,7 @@ import (
 	"image"
 	"image/color"
 	_ "image/jpeg"
-	_ "image/png"
+	"image/png"
 	"os"
 	"strings"
 )
@@ -21,6 +21,18 @@ func mustReadImg(path string) image.Image {
 		panic(fmt.Sprintf("cannot decode %s: %s", path, err))
 	}
 	return i
+}
+
+func writeImg(path string, i image.Image) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("cannot create: %v", err)
+	}
+	defer f.Close()
+	if err := png.Encode(f, i); err != nil {
+		return fmt.Errorf("cannot encode: %v", err)
+	}
+	return nil
 }
 
 func mustBeGray(i image.Image) *image.Gray {
@@ -63,4 +75,48 @@ func median(s []uint8) uint8 {
 		total += int(s[i])
 	}
 	return uint8(total / len(s))
+}
+
+func cloneSlice(b []uint8) []uint8 {
+	c := make([]uint8, len(b))
+	copy(c, b)
+	return c
+}
+
+func cloneImg(src image.Image) image.Image {
+	switch s := src.(type) {
+	case *image.Gray:
+		clone := *s
+		clone.Pix = cloneSlice(s.Pix)
+		return &clone
+	case *image.NRGBA:
+		clone := *s
+		clone.Pix = cloneSlice(s.Pix)
+		return &clone
+	case *image.NRGBA64:
+		clone := *s
+		clone.Pix = cloneSlice(s.Pix)
+		return &clone
+	case *image.RGBA:
+		clone := *s
+		clone.Pix = cloneSlice(s.Pix)
+		return &clone
+	case *image.RGBA64:
+		clone := *s
+		clone.Pix = cloneSlice(s.Pix)
+		return &clone
+	case *image.YCbCr:
+		clone := *s
+		clone.Y = cloneSlice(s.Y)
+		clone.Cb = cloneSlice(s.Cb)
+		clone.Cr = cloneSlice(s.Cr)
+		return &clone
+	}
+	return nil
+}
+
+func cloneGray(s *image.Gray) *image.Gray {
+	c := *s
+	c.Pix = cloneSlice(s.Pix)
+	return &c
 }
