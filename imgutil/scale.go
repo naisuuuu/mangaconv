@@ -9,6 +9,42 @@ import (
 	"sync"
 )
 
+type cacheScaler struct {
+	kernel *Kernel
+	cache  map[cacheKey]Scaler
+	mu     *sync.Mutex
+}
+
+type cacheKey struct {
+	dw, dh, sw, sh int
+}
+
+// Scale implements the Scaler interface.
+func (z *cacheScaler) Scale(dst, src *image.Gray) {
+	key := cacheKey{dst.Rect.Dx(), dst.Rect.Dy(), src.Rect.Dx(), src.Rect.Dy()}
+
+	z.mu.Lock()
+	scaler, ok := z.cache[key]
+	if !ok {
+		scaler = z.kernel.NewScaler(key.dw, key.dh, key.sw, key.sh)
+		z.cache[key] = scaler
+	}
+	z.mu.Unlock()
+
+	scaler.Scale(dst, src)
+}
+
+// NewCacheScaler creates, caches and reuses kernel scalers optimized for each unique combination
+// of destination and source width and height. It is mostly useful when scaling a large quantity of
+// images in a few fixed sizes.
+func NewCacheScaler(k *Kernel) Scaler {
+	return &cacheScaler{
+		kernel: k,
+		cache:  make(map[cacheKey]Scaler),
+		mu:     &sync.Mutex{},
+	}
+}
+
 // Scaler scales the source image to the destination image.
 type Scaler interface {
 	Scale(dst, src *image.Gray)
