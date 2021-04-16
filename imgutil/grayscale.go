@@ -8,49 +8,50 @@ import (
 // Grayscale returns an image converted to grayscale.
 // It always returns a copy.
 func Grayscale(img image.Image) *image.Gray {
-	switch i := img.(type) {
+	b := img.Bounds()
+	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
+	grayscale(dst, img)
+	return dst
+}
+
+func grayscale(dst *image.Gray, src image.Image) {
+	switch i := src.(type) {
 	case *image.Gray:
-		return clone(i)
+		clone(dst, i)
 	case *image.RGBA:
-		return rgbaToGray(i)
+		rgbaToGray(dst, i)
 	case *image.RGBA64:
-		return rgba64ToGray(i)
+		rgba64ToGray(dst, i)
 	case *image.NRGBA:
-		return nrgbaToGray(i)
+		nrgbaToGray(dst, i)
 	case *image.NRGBA64:
-		return nrgba64ToGray(i)
+		nrgba64ToGray(dst, i)
 	case *image.YCbCr:
-		return ycbcrToGray(i)
+		ycbcrToGray(dst, i)
 	default:
-		return drawGray(img)
+		drawGray(dst, src)
 	}
 }
 
 // drawGray uses draw.Draw as a slow conversion fallback for unsupported image types.
-func drawGray(img image.Image) *image.Gray {
-	b := img.Bounds()
-	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
-	draw.Draw(dst, dst.Bounds(), img, b.Min, draw.Src)
-	return dst
+func drawGray(dst *image.Gray, src image.Image) {
+	draw.Draw(dst, dst.Bounds(), src, src.Bounds().Min, draw.Src)
 }
 
 // clone returns a copy of a grayscale image. It additionally corrects negative bounds and removes
 // dangling bytes from the underlaying pixel slice, if any are present.
-func clone(src *image.Gray) *image.Gray {
-	b := src.Bounds()
-	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
+func clone(dst, src *image.Gray) {
 	if dst.Stride == src.Stride {
 		// no need to correct stride, simply copy pixels.
 		copy(dst.Pix, src.Pix)
-		return dst
+		return
 	}
 	// need to correct stride.
-	for i := 0; i < b.Dy(); i++ {
+	for i := 0; i < src.Rect.Dy(); i++ {
 		dstH := i * dst.Stride
 		srcH := i * src.Stride
 		copy(dst.Pix[dstH:dstH+dst.Stride], src.Pix[srcH:srcH+dst.Stride])
 	}
-	return dst
 }
 
 // rgbToGray returns a grayscale value from alpha premultiplied red, green and blue values.
@@ -69,10 +70,8 @@ func rgbToGray(r, g, b uint32) uint8 {
 }
 
 // rgbaToGray converts an RGBA image to grayscale.
-func rgbaToGray(src *image.RGBA) *image.Gray {
-	b := src.Bounds()
-	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
-	concurrentIterate(b.Dy(), func(y int) {
+func rgbaToGray(dst *image.Gray, src *image.RGBA) {
+	concurrentIterate(src.Rect.Dy(), func(y int) {
 		for x := 0; x < dst.Stride; x++ {
 			i := y*src.Stride + x*4
 			s := src.Pix[i : i+3 : i+3]
@@ -87,14 +86,11 @@ func rgbaToGray(src *image.RGBA) *image.Gray {
 			dst.Pix[y*dst.Stride+x] = rgbToGray(r, g, b)
 		}
 	})
-	return dst
 }
 
 // rgba64ToGray lossily converts a 64 bit RGBA image to grayscale.
-func rgba64ToGray(src *image.RGBA64) *image.Gray {
-	b := src.Bounds()
-	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
-	concurrentIterate(b.Dy(), func(y int) {
+func rgba64ToGray(dst *image.Gray, src *image.RGBA64) {
+	concurrentIterate(src.Rect.Dy(), func(y int) {
 		for x := 0; x < dst.Stride; x++ {
 			i := y*src.Stride + x*8
 			s := src.Pix[i : i+6 : i+6]
@@ -106,14 +102,11 @@ func rgba64ToGray(src *image.RGBA64) *image.Gray {
 			dst.Pix[y*dst.Stride+x] = rgbToGray(r, g, b)
 		}
 	})
-	return dst
 }
 
 // nrgbaToGray converts an NRGBA image to grayscale.
-func nrgbaToGray(src *image.NRGBA) *image.Gray {
-	b := src.Bounds()
-	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
-	concurrentIterate(b.Dy(), func(y int) {
+func nrgbaToGray(dst *image.Gray, src *image.NRGBA) {
+	concurrentIterate(src.Rect.Dy(), func(y int) {
 		for x := 0; x < dst.Stride; x++ {
 			i := y*src.Stride + x*4
 			s := src.Pix[i : i+4 : i+4]
@@ -133,14 +126,11 @@ func nrgbaToGray(src *image.NRGBA) *image.Gray {
 			dst.Pix[y*dst.Stride+x] = rgbToGray(r, g, b)
 		}
 	})
-	return dst
 }
 
 // nrgba64ToGray lossily converts an NRGBA64 image to grayscale.
-func nrgba64ToGray(src *image.NRGBA64) *image.Gray {
-	b := src.Bounds()
-	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
-	concurrentIterate(b.Dy(), func(y int) {
+func nrgba64ToGray(dst *image.Gray, src *image.NRGBA64) {
+	concurrentIterate(src.Rect.Dy(), func(y int) {
 		for x := 0; x < dst.Stride; x++ {
 			i := y*src.Stride + x*8
 			s := src.Pix[i : i+8 : i+8]
@@ -156,17 +146,13 @@ func nrgba64ToGray(src *image.NRGBA64) *image.Gray {
 			dst.Pix[y*dst.Stride+x] = rgbToGray(r, g, b)
 		}
 	})
-	return dst
 }
 
 // ycbcrToGray converts a YCbCr image to grayscale.
-func ycbcrToGray(src *image.YCbCr) *image.Gray {
-	b := src.Bounds()
-	dst := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
-	for i := 0; i < b.Dy(); i++ {
+func ycbcrToGray(dst *image.Gray, src *image.YCbCr) {
+	for i := 0; i < src.Rect.Dy(); i++ {
 		dstH := i * dst.Stride
 		srcH := i * src.YStride
 		copy(dst.Pix[dstH:dstH+dst.Stride], src.Y[srcH:srcH+dst.Stride])
 	}
-	return dst
 }
