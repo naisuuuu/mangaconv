@@ -190,11 +190,7 @@ func BenchmarkGrayscale(b *testing.B) {
 		}
 		b.Run(bb.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				b.StopTimer()
-				img := cloneImg(bb.img)
-				b.StartTimer()
-
-				imgutil.Grayscale(img)
+				imgutil.Grayscale(bb.img)
 			}
 		})
 	}
