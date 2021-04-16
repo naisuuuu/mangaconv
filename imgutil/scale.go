@@ -12,7 +12,7 @@ import (
 type cacheScaler struct {
 	kernel *Kernel
 	cache  map[cacheKey]Scaler
-	mu     *sync.Mutex
+	mu     sync.Mutex
 }
 
 type cacheKey struct {
@@ -41,7 +41,7 @@ func NewCacheScaler(k *Kernel) Scaler {
 	return &cacheScaler{
 		kernel: k,
 		cache:  make(map[cacheKey]Scaler),
-		mu:     &sync.Mutex{},
+		mu:     sync.Mutex{},
 	}
 }
 
