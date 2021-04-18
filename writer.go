@@ -9,16 +9,10 @@ import (
 	// for image decoding.
 	_ "image/png"
 	"io"
-	"os"
 )
 
-func writeZip(path string, pages <-chan page) error {
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	w := zip.NewWriter(f)
+func writeZip(writer io.Writer, pages <-chan page) error {
+	w := zip.NewWriter(writer)
 	defer w.Close()
 	for p := range pages {
 		f, err := w.Create(fmt.Sprintf("%09d.jpg", p.Index))
