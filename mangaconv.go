@@ -33,12 +33,14 @@ type Params struct {
 func New(p Params) *Converter {
 	return &Converter{
 		params: p,
+		scaler: imgutil.NewCacheScaler(imgutil.CatmullRom),
 	}
 }
 
 // Converter converts manga for reading on an e-reader. It's safe to use concurrently.
 type Converter struct {
 	params Params
+	scaler imgutil.Scaler
 }
 
 // Convert reads a file from in, converts it, and writes to out.
@@ -96,7 +98,8 @@ func (c *Converter) convert(ctx context.Context, converted chan<- page, pages <-
 			defer wg.Done()
 			for pg := range pages {
 				src := imgutil.Grayscale(pg.Image)
-				img := imgutil.Fit(src, c.params.Width, c.params.Height)
+				img := image.NewGray(imgutil.FitRect(src.Bounds(), c.params.Width, c.params.Height))
+				c.scaler.Scale(img, src)
 				imgutil.AutoContrast(img, c.params.Cutoff)
 				imgutil.AdjustGamma(img, c.params.Gamma)
 				select {
