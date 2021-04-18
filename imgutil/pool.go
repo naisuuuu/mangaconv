@@ -20,6 +20,9 @@ type ImagePool struct {
 
 // GetFromImage converts an image into a grayscale image with pixel slice taken from the pool.
 func (p *ImagePool) GetFromImage(img image.Image) *image.Gray {
+	if i, ok := img.(*image.Gray); ok {
+		return i
+	}
 	dst := p.Get(img.Bounds().Dx(), img.Bounds().Dy())
 	grayscale(dst, img)
 	return dst
