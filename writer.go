@@ -11,7 +11,7 @@ import (
 	"io"
 )
 
-func writeZip(writer io.Writer, pages <-chan page) error {
+func (c *Converter) writeZip(writer io.Writer, pages <-chan page) error {
 	w := zip.NewWriter(writer)
 	defer w.Close()
 	for p := range pages {
@@ -20,6 +20,9 @@ func writeZip(writer io.Writer, pages <-chan page) error {
 			return err
 		}
 		err = saveImg(f, p.Image)
+		if v, ok := p.Image.(*image.Gray); ok {
+			c.pool.Put(v)
+		}
 		if err != nil {
 			return err
 		}

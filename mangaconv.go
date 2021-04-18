@@ -34,6 +34,7 @@ func New(p Params) *Converter {
 	return &Converter{
 		params: p,
 		scaler: imgutil.NewCacheScaler(imgutil.CatmullRom),
+		pool:   imgutil.NewImagePool(),
 	}
 }
 
@@ -41,6 +42,7 @@ func New(p Params) *Converter {
 type Converter struct {
 	params Params
 	scaler imgutil.Scaler
+	pool   *imgutil.ImagePool
 }
 
 // Convert reads a file from in, converts it, and writes to out.
@@ -76,7 +78,7 @@ func (c *Converter) ConvertToWriter(in string, out io.Writer) error {
 	})
 
 	errg.Go(func() error {
-		return writeZip(out, converted)
+		return c.writeZip(out, converted)
 	})
 
 	return errg.Wait()
@@ -97,13 +99,15 @@ func (c *Converter) convert(ctx context.Context, converted chan<- page, pages <-
 		go func() {
 			defer wg.Done()
 			for pg := range pages {
-				src := imgutil.Grayscale(pg.Image)
-				img := image.NewGray(imgutil.FitRect(src.Bounds(), c.params.Width, c.params.Height))
-				c.scaler.Scale(img, src)
-				imgutil.AutoContrast(img, c.params.Cutoff)
-				imgutil.AdjustGamma(img, c.params.Gamma)
+				src := c.pool.GetFromImage(pg.Image)
+				r := imgutil.FitRect(src.Bounds(), c.params.Width, c.params.Height)
+				dst := c.pool.Get(r.Dx(), r.Dy())
+				c.scaler.Scale(dst, src)
+				c.pool.Put(src)
+				imgutil.AutoContrast(dst, c.params.Cutoff)
+				imgutil.AdjustGamma(dst, c.params.Gamma)
 				select {
-				case converted <- page{img, pg.Index}:
+				case converted <- page{dst, pg.Index}:
 				case <-ctx.Done():
 					return
 				}
