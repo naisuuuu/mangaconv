@@ -118,4 +118,23 @@ func BenchmarkScaler(b *testing.B) {
 			}
 		})
 	}
+	for _, bb := range benchmarks {
+		b.Run("Pooled"+bb.name, func(b *testing.B) {
+			var images []*image.Gray
+			for _, i := range bb.images {
+				images = append(images, mustBeGray(mustReadImg("testdata/"+i)))
+			}
+			pool := imgutil.NewImagePool()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				b.StopTimer()
+				img := images[i%len(images)]
+				dstRect := imgutil.FitRect(img.Bounds(), 150, 150)
+				b.StartTimer()
+				dst := pool.Get(dstRect.Dx(), dstRect.Dy())
+				bb.scaler.Scale(dst, img)
+				pool.Put(dst)
+			}
+		})
+	}
 }
