@@ -56,18 +56,20 @@ If provided directory does not exist, mangaconv will attempt to create it. (defa
 		}
 	}()
 
+	converter := mangaconv.New(mangaconv.Params{
+		Cutoff: *cutoff,
+		Gamma:  *gamma,
+		Height: *height,
+		Width:  *width,
+	})
+
 	var wg sync.WaitGroup
 	for i := 0; i < 2; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for t := range targets {
-				if err := mangaconv.Convert(t.in, t.out, mangaconv.Params{
-					Cutoff: *cutoff,
-					Gamma:  *gamma,
-					Height: *height,
-					Width:  *width,
-				}); err != nil {
+				if err := converter.Convert(t.in, t.out); err != nil {
 					fmt.Println("Failed to convert", filepath.Base(t.in), err)
 					return
 				}

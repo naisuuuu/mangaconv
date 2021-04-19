@@ -6,6 +6,8 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"io"
+	"os"
 	"runtime"
 	"sync"
 
@@ -27,8 +29,35 @@ type Params struct {
 	Width  int
 }
 
-// Convert converts a manga for reading on an e-reader.
-func Convert(in, out string, params Params) error {
+// New creates a new Converter with the provided Params.
+func New(p Params) *Converter {
+	return &Converter{
+		params: p,
+		scaler: imgutil.NewCacheScaler(imgutil.CatmullRom),
+		pool:   imgutil.NewImagePool(),
+	}
+}
+
+// Converter converts manga for reading on an e-reader. It's safe to use concurrently.
+type Converter struct {
+	params Params
+	scaler imgutil.Scaler
+	pool   *imgutil.ImagePool
+}
+
+// Convert reads a file from in, converts it, and writes to out.
+func (c *Converter) Convert(in, out string) error {
+	f, err := os.Create(out)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	return c.ConvertToWriter(in, f)
+}
+
+// Convert reads a file from in, converts it, and writes to an io.Writer.
+func (c *Converter) ConvertToWriter(in string, out io.Writer) error {
 	read, err := selectReader(in)
 	if err != nil {
 		return fmt.Errorf("cannot read %s: %w", in, err)
@@ -44,12 +73,12 @@ func Convert(in, out string, params Params) error {
 	converted := make(chan page)
 	errg.Go(func() error {
 		defer close(converted)
-		convert(ctx, converted, pages, params)
+		c.convert(ctx, converted, pages)
 		return nil
 	})
 
 	errg.Go(func() error {
-		return writeZip(out, converted)
+		return c.writeZip(out, converted)
 	})
 
 	return errg.Wait()
@@ -63,19 +92,22 @@ type page struct {
 
 // convert reads a channel of pages, applies modifications as adjusted by params and emits converted
 // pages.
-func convert(ctx context.Context, converted chan<- page, pages <-chan page, p Params) {
+func (c *Converter) convert(ctx context.Context, converted chan<- page, pages <-chan page) {
 	var wg sync.WaitGroup
 	wg.Add(runtime.NumCPU())
 	for i := 0; i < runtime.NumCPU(); i++ {
 		go func() {
 			defer wg.Done()
 			for pg := range pages {
-				img := imgutil.Grayscale(pg.Image)
-				img = imgutil.Fit(img, p.Width, p.Height)
-				imgutil.AutoContrast(img, p.Cutoff)
-				imgutil.AdjustGamma(img, p.Gamma)
+				src := c.pool.GetFromImage(pg.Image)
+				r := imgutil.FitRect(src.Bounds(), c.params.Width, c.params.Height)
+				dst := c.pool.Get(r.Dx(), r.Dy())
+				c.scaler.Scale(dst, src)
+				c.pool.Put(src)
+				imgutil.AutoContrast(dst, c.params.Cutoff)
+				imgutil.AdjustGamma(dst, c.params.Gamma)
 				select {
-				case converted <- page{img, pg.Index}:
+				case converted <- page{dst, pg.Index}:
 				case <-ctx.Done():
 					return
 				}

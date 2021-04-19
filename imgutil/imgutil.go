@@ -131,11 +131,3 @@ func FitRect(rect image.Rectangle, x, y int) image.Rectangle {
 	}
 	return image.Rect(0, 0, int(math.Round(scale*width)), int(math.Round(scale*height)))
 }
-
-// Fit returns an image scaled to fit the specified bounding box without changing the aspect ratio.
-// It returns a copy of the image.
-func Fit(img *image.Gray, x, y int) *image.Gray {
-	dst := image.NewGray(FitRect(img.Rect, x, y))
-	CatmullRom.Scale(dst, img)
-	return dst
-}
