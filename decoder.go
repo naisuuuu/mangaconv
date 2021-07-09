@@ -7,6 +7,8 @@ import (
 	"io"
 	"runtime"
 
+	// This adds webp support.
+	_ "golang.org/x/image/webp"
 	"golang.org/x/sync/errgroup"
 )
 

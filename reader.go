@@ -134,7 +134,7 @@ func readZipFiles(ctx context.Context, pages chan<- rawPage, r *zip.ReadCloser) 
 
 func isImage(fname string) bool {
 	switch filepath.Ext(fname) {
-	case ".png", ".jpg":
+	case ".png", ".jpg", ".webp":
 		return true
 	default:
 		return false
