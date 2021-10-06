@@ -19,14 +19,17 @@ import (
 // Params adjust how each page of a manga is transformed. For sane defaults, see cmd/mangaconv.
 //
 // Cutoff is the % of brightest and darkest pixels ignored when applying histogram normalization.
+// Deflate controls whether or not an image should be additionally compressed when saved to a cbz
+// file.
 // Gamma is the multiplier by which an image is darkened or brightened. Values > 1 brighten and
 // values < 1 darken it, with 1 leaving the image as is.
 // Height and Width describe a bounding box in which the output image will be fit.
 type Params struct {
-	Cutoff float64
-	Gamma  float64
-	Height int
-	Width  int
+	Cutoff  float64
+	Deflate bool
+	Gamma   float64
+	Height  int
+	Width   int
 }
 
 // New creates a new Converter with the provided Params.
@@ -78,7 +81,7 @@ func (c *Converter) ConvertToWriter(in string, out io.Writer) error {
 	})
 
 	errg.Go(func() error {
-		return c.writeZip(out, converted)
+		return c.writeZip(out, c.params.Deflate, converted)
 	})
 
 	return errg.Wait()
