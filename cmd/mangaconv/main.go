@@ -20,6 +20,8 @@ func main() {
 	cutoff := flag.Float64("cutoff", 1, `Autocontrast cutoff.
 This value is the percentage of brightest and darkest pixels ignored when normalizing the histogram.
 Applying a cutoff nets a more perceivable contrast improvement.`)
+	deflate := flag.Bool("deflate", false, `Additionally compress the output cbz files.
+This is usually not worthwhile, as jpg files are already compressed`)
 	gamma := flag.Float64("gamma", 0.75, `Gamma correction value.
 Values < 1 darken the image, > 1 brighten it and 1 disables gamma correction.
 The default will look too dark on your computer screen, but much richer than before on e-ink.`)
@@ -57,10 +59,11 @@ If provided directory does not exist, mangaconv will attempt to create it. (defa
 	}()
 
 	converter := mangaconv.New(mangaconv.Params{
-		Cutoff: *cutoff,
-		Gamma:  *gamma,
-		Height: *height,
-		Width:  *width,
+		Cutoff:  *cutoff,
+		Deflate: *deflate,
+		Gamma:   *gamma,
+		Height:  *height,
+		Width:   *width,
 	})
 
 	var wg sync.WaitGroup
